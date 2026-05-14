@@ -15,7 +15,7 @@ def run():
     # 1. Iniciar o Servidor FastAPI
     print("📂 Iniciando Backend (FastAPI) em http://localhost:8000...")
     server_process = subprocess.Popen(
-        [sys.executable, "main.py"],
+        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
         cwd=server_dir,
         shell=True if os.name == 'nt' else False
     )

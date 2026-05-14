@@ -1,17 +1,18 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from ..models.schemas import User, UserUpdate
-from ..services.supabase_service import SupabaseService, get_supabase_service
-from .deps import get_current_user
+from ..services.supabase_service import SupabaseService
+from .deps import get_current_user, security
+from fastapi.security import HTTPAuthorizationCredentials
 import logging
 
 router = APIRouter(prefix="/v1/users", tags=["users"])
 
 @router.put("/{user_id}", response_model=User, status_code=status.HTTP_200_OK)
 async def update_user(
-    user_id: str, 
-    data: UserUpdate, 
-    service: SupabaseService = Depends(get_supabase_service),
-    current_user: dict = Depends(get_current_user)
+    user_id: str,
+    data: UserUpdate,
+    current_user: dict = Depends(get_current_user),
+    token: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Garante que o usuário só consiga editar o próprio perfil."""
     if current_user["id"] != user_id:
@@ -21,9 +22,9 @@ async def update_user(
         )
         
     try:
-        update_data = data.model_dump(exclude_unset=True)
-        if update_data.get('birth_date') and hasattr(update_data['birth_date'], 'isoformat'):
-            update_data['birth_date'] = update_data['birth_date'].isoformat()
+        service = await SupabaseService.create_authenticated(token.credentials)
+        # mode='json' resolve a serialização da data de nascimento automaticamente
+        update_data = data.model_dump(exclude_unset=True, mode='json')
 
         res = await service.update("users", user_id, update_data)
         if not res.data:
@@ -46,11 +47,12 @@ async def update_user(
 @router.get("/{user_id}", response_model=User, status_code=status.HTTP_200_OK)
 async def get_user(
     user_id: str, 
-    service: SupabaseService = Depends(get_supabase_service),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    token: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Busca dados de um usuário específico."""
     try:
+        service = await SupabaseService.create_authenticated(token.credentials)
         res = await service.select("users", {"id": user_id})
         if not res.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado")

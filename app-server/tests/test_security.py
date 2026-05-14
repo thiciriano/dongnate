@@ -50,6 +50,11 @@ class TestSecurity(unittest.TestCase):
         
         # 404 significa que o SQL foi tratado como texto e não executado
         self.assertEqual(response.status_code, 404)
+        
+        # Verifica se o serviço de select foi chamado com a string maliciosa literal,
+        # provando que ela não foi interpretada como comando SQL antes da consulta.
+        calls = self.mock_service.select.call_args_list
+        self.assertTrue(any(malicious_id in str(call) for call in calls))
 
     def test_xss_injection_attempt(self):
         """Testa inserção de scripts em rota protegida"""

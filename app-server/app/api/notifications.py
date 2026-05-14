@@ -17,7 +17,7 @@ async def get_notifications(user_id: str, service: SupabaseService = Depends(get
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{notification_id}/read")
-async def mark_as_read(notification_id: int, service: SupabaseService = Depends(get_supabase_service)):
+async def mark_as_read(notification_id: int, service: SupabaseService = Depends(get_supabase_service)): # Removida barra final
     try:
         await service.client.table("notifications").update({"is_read": True}).eq("id", notification_id).execute()
         return {"status": "success"}

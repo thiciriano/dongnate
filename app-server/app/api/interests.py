@@ -6,13 +6,13 @@ from .deps import get_current_user, RoleChecker
 
 router = APIRouter(prefix="/v1/interests", tags=["interests"])
 
-@router.post("/", response_model=Interest)
+@router.post("", response_model=Interest)
 async def create_interest(
     interest: InterestCreate, 
     service: SupabaseService = Depends(get_supabase_service),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(RoleChecker(["doador"]))
 ):
-    """Qualquer usuário logado pode manifestar interesse."""
+    """Apenas usuários com perfil de 'doador' podem manifestar interesse."""
     try:
         # Garante que o user_id do interesse seja o do usuário logado
         data = interest.model_dump()
@@ -46,7 +46,7 @@ async def get_interests_by_user(
 async def get_interests_by_request(
     request_id: int, 
     service: SupabaseService = Depends(get_supabase_service),
-    current_user: dict = Depends(RoleChecker(["ong"]))
+    current_user: dict = Depends(RoleChecker(["ong"])) # Mantido apenas para ONGs
 ):
     """Apenas ONGs podem ver quem se interessou por um pedido."""
     try:

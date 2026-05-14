@@ -1,8 +1,13 @@
-import api from '../services/api.js';
+import api from "../services/api.js";
+import RequestService from "../services/RequestService.js";
+import {
+  LatestRequestsStrategy,
+  UrgentRequestsStrategy,
+} from "../services/requestStrategies.js";
 
 export async function LandingPage(container) {
-    // Renderiza a estrutura básica imediatamente
-    container.innerHTML = `
+  // Renderiza a estrutura básica imediatamente
+  container.innerHTML = `
         <div class="flex flex-col overflow-x-hidden font-dmsans bg-white selection:bg-dn-amber selection:text-white">
 
             <!-- Navbar Flutuante Premium -->
@@ -151,59 +156,70 @@ export async function LandingPage(container) {
         </div>
     `;
 
-    // Efeito de scroll na navbar
-    window.onscroll = () => {
-        const nav = document.getElementById('landing-nav');
-        if (window.scrollY > 100) {
-            nav.classList.remove('py-6');
-            nav.classList.add('py-2');
-        } else {
-            nav.classList.remove('py-2');
-            nav.classList.add('py-6');
-        }
-    };
-
-    // Lógica para carregar os pedidos REAIS na Landing
-    try {
-        const requests = await api.requests.getAll();
-        const latest = requests.slice(0, 3);
-        const requestsContainer = document.getElementById('latest-requests-landing');
-
-        if (latest.length > 0) {
-            requestsContainer.innerHTML = latest.map((req, idx) => `
-                <div class="group bg-dn-cream/40 p-10 rounded-[4rem] border border-dn-green-pale hover:bg-white hover:shadow-4xl transition-all duration-700 flex flex-col h-full animate-fade-in-up" style="animation-delay: ${idx * 0.2}s">
-                    <div class="flex justify-between items-start mb-8">
-                        <span class="text-[10px] font-black text-dn-amber bg-dn-amber/10 px-4 py-1.5 rounded-full uppercase tracking-widest">${req.category}</span>
-                        <span class="text-[9px] font-bold text-dn-green uppercase tracking-widest">${req.urgency}</span>
-                    </div>
-
-                    <h3 class="text-3xl font-black text-dn-green-dark font-playfair mb-6 leading-tight group-hover:text-dn-green transition-colors">${req.title}</h3>
-                    <p class="text-dn-ink-mid text-sm leading-relaxed mb-10 flex-1 line-clamp-4 font-light italic">"${req.description}"</p>
-
-                    <div class="pt-8 border-t border-dn-green-pale/50 flex justify-between items-center">
-                         <div class="flex -space-x-2">
-                            <div class="w-8 h-8 rounded-full bg-dn-green border-2 border-white flex items-center justify-center text-[10px] text-white font-black">?</div>
-                         </div>
-                        <a href="/login" data-link class="bg-dn-green-dark text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest group-hover:bg-dn-amber transition-all">
-                            Ajudar →
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            requestsContainer.innerHTML = `
-                <div class="col-span-3 text-center py-20 bg-dn-cream rounded-[4rem] border border-dashed border-dn-green/20">
-                    <p class="text-dn-ink-soft italic font-playfair text-xl">A rede está silenciosa hoje. Seja o primeiro a criar um pedido!</p>
-                </div>
-            `;
-        }
-    } catch (e) {
-        console.error("Erro ao carregar pedidos na landing", e);
+  // Efeito de scroll na navbar
+  window.onscroll = () => {
+    const nav = document.getElementById("landing-nav");
+    if (nav) {
+      if (window.scrollY > 100) {
+        nav.classList.remove("py-6");
+        nav.classList.add("py-2");
+      } else {
+        nav.classList.remove("py-2");
+        nav.classList.add("py-6");
+      }
     }
+  };
+
+  // Lógica para carregar os pedidos REAIS na Landing
+  try {
+    const requestService = new RequestService();
+    requestService.setFetchingStrategy(new LatestRequestsStrategy());
+    const requests = await requestService.getRequests();
+
+    const requestsContainer = document.getElementById(
+      "latest-requests-landing",
+    );
+    if (requestsContainer) {
+      if (requests.length > 0) {
+        requestsContainer.innerHTML = requests
+          .map(
+            (req, idx) => `
+                  <div class="group bg-dn-cream/40 p-10 rounded-[4rem] border border-dn-green-pale hover:bg-white hover:shadow-4xl transition-all duration-700 flex flex-col h-full animate-fade-in-up" style="animation-delay: ${idx * 0.2}s">
+                      <div class="flex justify-between items-start mb-8">
+                          <span class="text-[10px] font-black text-dn-amber bg-dn-amber/10 px-4 py-1.5 rounded-full uppercase tracking-widest">${req.category}</span>
+                          <span class="text-[9px] font-bold text-dn-green uppercase tracking-widest">${req.urgency}</span>
+                      </div>
+  
+                      <h3 class="text-3xl font-black text-dn-green-dark font-playfair mb-6 leading-tight group-hover:text-dn-green transition-colors">${req.title}</h3>
+                      <p class="text-dn-ink-mid text-sm leading-relaxed mb-10 flex-1 line-clamp-4 font-light italic">"${req.description}"</p>
+  
+                      <div class="pt-8 border-t border-dn-green-pale/50 flex justify-between items-center">
+                           <div class="flex -space-x-2">
+                              <div class="w-8 h-8 rounded-full bg-dn-green border-2 border-white flex items-center justify-center text-[10px] text-white font-black">?</div>
+                           </div>
+                          <a href="/login" data-link class="bg-dn-green-dark text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest group-hover:bg-dn-amber transition-all">
+                              Ajudar →
+                          </a>
+                      </div>
+                  </div>
+              `,
+          )
+          .join("");
+      } else {
+        requestsContainer.innerHTML = `
+                  <div class="col-span-3 text-center py-20 bg-dn-cream rounded-[4rem] border border-dashed border-dn-green/20">
+                      <p class="text-dn-ink-soft italic font-playfair text-xl">A rede está silenciosa hoje. Seja o primeiro a criar um pedido!</p>
+                  </div>
+              `;
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao carregar pedidos na landing", e);
+  }
 }
 
 function FAQItem(question, answer) {
-    return `
+  return `
         <div class="border-b border-white/10 pb-6 group cursor-pointer">
             <div class="flex justify-between items-center py-4">
                 <h4 class="text-xl md:text-2xl font-black font-playfair group-hover:text-dn-amber transition-colors">${question}</h4>

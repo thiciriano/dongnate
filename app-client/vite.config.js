@@ -5,7 +5,15 @@ export default defineConfig({
   root: '.',
   server: {
     port: 5173,
-    open: true
+    open: true,
+    proxy: {
+      // Redireciona chamadas da API internamente para o backend FastAPI
+      '/v1': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   plugins: [
     VitePWA({

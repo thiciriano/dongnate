@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from ..models.schemas import UserCreate, LoginRequest, TokenResponse, User
 from ..services.supabase_service import SupabaseService, get_supabase_service
+from .deps import get_current_user
+from fastapi.security import HTTPAuthorizationCredentials
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
-@router.post("/register", response_model=User)
+@router.post("/register", response_model=User) # Removida barra final
 async def register(user_data: UserCreate, service: SupabaseService = Depends(get_supabase_service)):
     try:
         user = await service.register_user_with_sync(user_data)
@@ -14,7 +16,7 @@ async def register(user_data: UserCreate, service: SupabaseService = Depends(get
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse) # Removida barra final
 async def login(credentials: LoginRequest, service: SupabaseService = Depends(get_supabase_service)):
     try:
         res = await service.sign_in(credentials.email, credentials.password)
@@ -30,9 +32,13 @@ async def login(credentials: LoginRequest, service: SupabaseService = Depends(ge
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
 
 @router.delete("/me")
-async def delete_account(user_id: str = Query(...), service: SupabaseService = Depends(get_supabase_service)):
+async def delete_account(
+    current_user: dict = Depends(get_current_user),
+    service: SupabaseService = Depends(get_supabase_service)
+):
+    """Exclui permanentemente a conta do usuário logado."""
     try:
-        await service.delete_user(user_id)
+        await service.delete_user(current_user["id"])
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

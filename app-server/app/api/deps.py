@@ -1,12 +1,16 @@
+import os
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from ..services.supabase_service import SupabaseService, get_supabase_service
+from ..services.supabase_service import get_supabase_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
 async def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(security),
-    service: SupabaseService = Depends(get_supabase_service)
+    service = Depends(get_supabase_service)
 ):
     """
     Verifica o token JWT com o Supabase e retorna os dados do usuário.
@@ -27,7 +31,14 @@ async def get_current_user(
             raise HTTPException(status_code=404, detail="Usuário não encontrado")
             
         return res.data[0]
-    except Exception:
+    except Exception as e:
+        # Logamos apenas erros que não sejam de parsing comum de JWT vazio/inválido
+        error_msg = str(e)
+        if "signing method RS256 is invalid" in error_msg or "invalid JWT" in error_msg:
+             logger.warning(f"Tentativa de acesso com token incompatível: {error_msg}")
+        else:
+             logger.error(f"Erro inesperado na validação do token: {error_msg}")
+             
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Não foi possível validar as credenciais"

@@ -53,7 +53,7 @@ export async function ProfileScreen(container) {
             <div id="delete-modal" class="fixed inset-0 bg-dn-green-dark/95 flex items-center justify-center p-6 hidden z-[4000] backdrop-blur-md">
                 <div class="bg-white p-8 rounded-[3rem] max-w-md w-full shadow-2xl border border-dn-green-pale max-h-[90vh] overflow-y-auto">
                     <h3 class="text-2xl font-black text-dn-green-dark mb-2 font-playfair">Sentiremos sua falta</h3>
-                    <p class="text-dn-ink-soft text-xs mb-6 leading-relaxed">Sua conta e dados serão agendados para exclusão definitiva em 30 dias.</p>
+                    <p class="text-dn-ink-soft text-xs mb-6 leading-relaxed">Sua conta e dados serão excluídos permanentemente de nossa base agora.</p>
                     
                     <div class="space-y-4 mb-8">
                         <div>
@@ -74,7 +74,7 @@ export async function ProfileScreen(container) {
                     </div>
 
                     <div class="flex flex-col gap-3">
-                        <button id="confirm-delete" class="bg-dn-error text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-red-200">SOLICITAR EXCLUSÃO EM 30 DIAS</button>
+                        <button id="confirm-delete" class="bg-dn-error text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-red-200">EXCLUIR MINHA CONTA AGORA</button>
                         <button id="cancel-delete" class="text-dn-ink-soft font-black text-xs uppercase tracking-widest py-2">MANTER MINHA CONTA</button>
                     </div>
                 </div>
@@ -117,15 +117,15 @@ export async function ProfileScreen(container) {
                 try {
                     confirmBtn.disabled = true;
                     confirmBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
-                    await api.auth.deleteAccount(user.id);
-                    alert('Sua solicitação foi registrada. Sua conta será excluída permanentemente em até 30 dias.');
+                    await api.auth.deleteAccount();
+                    alert('Sua conta foi excluída com sucesso.');
                     api.auth.logout();
                     window.history.pushState({}, '', '/landing');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } catch (err) {
                     alert('Erro ao solicitar exclusão: ' + err.message);
                     confirmBtn.disabled = false;
-                    confirmBtn.textContent = 'SOLICITAR EXCLUSÃO EM 30 DIAS';
+                    confirmBtn.textContent = 'EXCLUIR MINHA CONTA AGORA';
                 }
             };
         }

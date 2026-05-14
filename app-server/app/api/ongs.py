@@ -6,7 +6,7 @@ from .deps import get_current_user, RoleChecker
 
 router = APIRouter(prefix="/v1/ongs", tags=["ongs"])
 
-@router.get("/", response_model=List[Ong])
+@router.get("", response_model=List[Ong])
 async def get_ongs(skip: int = 0, limit: int = 100, service: SupabaseService = Depends(get_supabase_service)):
     res = await service.select("ongs", skip=skip, limit=limit)
     return res.data
@@ -47,7 +47,7 @@ async def get_ong(id: int, service: SupabaseService = Depends(get_supabase_servi
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=Ong)
+@router.post("", response_model=Ong)
 async def create_ong(
     ong: OngCreate, 
     service: SupabaseService = Depends(get_supabase_service),

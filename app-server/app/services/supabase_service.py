@@ -8,12 +8,14 @@ from fastapi import Depends
 load_dotenv()
 
 url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
 
 if not url or not key:
-    print("⚠️ AVISO: SUPABASE_URL ou SUPABASE_KEY não configurados no .env")
+    logger.warning("SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados no .env")
 
 _async_supabase_client: AsyncClient = None
+
+# Cliente global (usado para operações administrativas via service_role)
 
 async def get_supabase_client() -> AsyncClient:
     global _async_supabase_client
@@ -30,6 +32,14 @@ class SupabaseService:
     def __init__(self, client: AsyncClient):
         self.client = client
 
+    @classmethod
+    async def create_authenticated(cls, token: str):
+        """Cria uma instância do serviço agindo em nome do usuário (respeita RLS)"""
+        # Criamos um novo cliente para esta requisição para evitar conflitos de sessão
+        client = await create_async_client(url, key)
+        await client.auth.set_session(access_token=token, refresh_token=token)
+        return cls(client)
+
     async def upload_file(self, bucket: str, file_content, file_name: str, content_type: str = "image/jpeg"):
         """Realiza upload de arquivo para o Supabase Storage"""
         # Garante nome único para evitar colisões
@@ -44,9 +54,11 @@ class SupabaseService:
                 file_options={"content-type": content_type}
             )
             
-            # Gera URL pública
-            url_res = self.client.storage.from_(bucket).get_public_url(unique_name)
-            return url_res
+            # Gera URL pública e garante que o retorno seja um dicionário serializável
+            # compatível com o que o frontend espera: res.url.publicUrl
+            public_url = await self.client.storage.from_(bucket).get_public_url(unique_name)
+            
+            return {"url": {"publicUrl": str(public_url)}}
         except Exception as e:
             logger.error(f"Erro no upload para o bucket {bucket}: {str(e)}")
             raise e
@@ -59,24 +71,30 @@ class SupabaseService:
         })
 
     async def register_user_with_sync(self, user_data):
+        # Usamos mode='json' para garantir que tipos como 'date' virem strings
+        auth_payload = user_data.model_dump(exclude={'password'}, mode='json')
+        
         res = await self.sign_up(
             email=user_data.email,
             password=user_data.password,
-            data=user_data.model_dump(exclude={'password'})
+            data=auth_payload
         )
         
         if not res.user:
             return None
 
-        public_data = user_data.model_dump(exclude={'password'})
+        public_data = user_data.model_dump(exclude={'password'}, mode='json')
         public_data["id"] = res.user.id
-        if public_data.get('birth_date'):
-            public_data['birth_date'] = public_data['birth_date'].isoformat()
-            
+
         try:
-            await self.insert("users", public_data)
+            sync_res = await self.insert("users", public_data)
+            if not sync_res.data:
+                raise Exception("Não foi possível criar o registro de perfil na tabela users.")
         except Exception as e:
             logger.error(f"Erro na sincronização do usuário {res.user.id}: {str(e)}")
+            # Remove o usuário do Auth se a sincronização falhar para permitir nova tentativa
+            await self.delete_user(res.user.id)
+            raise e
             
         return {**public_data, "created_at": res.user.created_at}
 
@@ -141,5 +159,6 @@ class SupabaseService:
     async def delete(self, table, id):
         return await self.client.table(table).delete().eq("id", id).execute()
 
-async def get_supabase_service(client: AsyncClient = Depends(get_supabase_client)) -> SupabaseService:
+async def get_supabase_service():
+    client = await get_supabase_client()
     return SupabaseService(client)

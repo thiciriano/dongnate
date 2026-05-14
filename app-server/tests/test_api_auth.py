@@ -62,5 +62,21 @@ class TestAuthAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "E-mail ou senha inválidos.")
 
+    def test_register_invalid_email(self):
+        """Testa se o schema rejeita e-mails formatados incorretamente"""
+        payload = {
+            "full_name": "Usuário Inválido",
+            "email": "email-sem-arroba",
+            "password": "123",
+            "role": "doador",
+            "birth_date": "1990-01-01",
+            "phone": "11999999999"
+        }
+
+        response = self.client.post("/v1/auth/register", json=payload)
+        
+        # Deve retornar 422 Unprocessable Entity devido à falha de validação do Pydantic
+        self.assertEqual(response.status_code, 422)
+
 if __name__ == '__main__':
     unittest.main()
