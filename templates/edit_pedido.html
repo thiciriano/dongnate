@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto p-8 md:p-12 font-dmsans">
+    <div class="mb-10">
+        <a href="/profile" class="text-dn-green font-black text-[10px] uppercase tracking-widest hover:underline">← Voltar ao Perfil</a>
+        <h2 class="text-4xl font-black font-playfair text-dn-green-dark mt-4">Editar Pedido</h2>
+        <p class="text-dn-ink-mid text-sm">Atualize as informações da sua solicitação de ajuda.</p>
+    </div>
+
+    <form action="/pedidos/editar/{{ pedido.id }}" method="post" class="bg-white p-8 rounded-[2.5rem] border border-dn-green-pale shadow-sm space-y-6">
+        <div>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-dn-ink-soft mb-2">Título do Pedido</label>
+            <input type="text" name="titulo" value="{{ pedido.titulo }}" required 
+                class="w-full p-4 bg-dn-cream rounded-2xl border-none focus:ring-2 focus:ring-dn-green text-dn-ink-dark font-bold">
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-dn-ink-soft mb-2">Tipo de Material</label>
+            <select name="tipo" class="w-full p-4 bg-dn-cream rounded-2xl border-none focus:ring-2 focus:ring-dn-green font-bold text-dn-ink-dark">
+                <option value="Alimentos" {% if pedido.tipo == 'Alimentos' %}selected{% endif %}>Alimentos</option>
+                <option value="Roupas" {% if pedido.tipo == 'Roupas' %}selected{% endif %}>Roupas</option>
+                <option value="Higiene" {% if pedido.tipo == 'Higiene' %}selected{% endif %}>Produtos de Higiene</option>
+                <option value="Móveis" {% if pedido.tipo == 'Móveis' %}selected{% endif %}>Móveis/Eletros</option>
+                <option value="Outros" {% if pedido.tipo == 'Outros' %}selected{% endif %}>Outros</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-dn-ink-soft mb-2">Nível de Urgência</label>
+            <select name="urgencia" class="w-full p-4 bg-dn-cream rounded-2xl border-none focus:ring-2 focus:ring-dn-green font-bold text-dn-ink-dark">
+                <option value="baixa" {% if pedido.urgencia == 'baixa' %}selected{% endif %}>Baixa</option>
+                <option value="normal" {% if pedido.urgencia == 'normal' %}selected{% endif %}>Normal</option>
+                <option value="urgente" {% if pedido.urgencia == 'urgente' %}selected{% endif %}>Urgente</option>
+                <option value="critica" {% if pedido.urgencia == 'critica' %}selected{% endif %}>Crítica</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black uppercase tracking-widest text-dn-ink-soft mb-2">Descrição Detalhada</label>
+            <textarea name="descricao" rows="4" required 
+                class="w-full p-4 bg-dn-cream rounded-2xl border-none focus:ring-2 focus:ring-dn-green text-dn-ink-dark font-medium">{{ pedido.descricao }}</textarea>
+        </div>
+
+        <button type="submit" class="w-full py-5 bg-dn-green text-white font-black rounded-2xl hover:bg-dn-green-dark transition-all shadow-lg text-xs tracking-widest uppercase">
+            SALVAR ALTERAÇÕES
+        </button>
+    </form>
+</div>
+{% endblock %}

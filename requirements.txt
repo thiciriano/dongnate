@@ -1,10 +1,9 @@
 fastapi
-uvicorn
-supabase
-pydantic
-pydantic-settings
-python-dotenv
+uvicorn[standard]
+sqlalchemy
+bcrypt
+python-jose[cryptography]
+jinja2
 python-multipart
-httpx
 pytest
-email-validator
+httpx

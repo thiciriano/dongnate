@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-center min-h-screen p-6">
+    <div class="max-w-xl w-full bg-white rounded-[2.5rem] shadow-2xl border border-dn-green-pale p-10 font-dmsans my-20">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black text-dn-green-dark mb-2 font-playfair">Crie sua conta</h1>
+            <p class="text-dn-ink-soft text-sm">Junte-se à nossa rede de solidariedade.</p>
+        </div>
+        <form action="/register" method="post" class="space-y-6">
+            <div class="space-y-4">
+                <input type="text" name="nome" placeholder="Nome Completo ou Razão Social" required class="input-field">
+                <input type="email" name="email" placeholder="E-mail de Acesso" required class="input-field">
+                <input type="text" name="whatsapp" placeholder="WhatsApp (ex: 11999998888)" required class="input-field">
+                <input type="text" name="telefone" placeholder="Telefone" required class="input-field">
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="relative flex flex-col items-center p-4 border-2 border-dn-green-pale rounded-2xl cursor-pointer hover:bg-dn-green-pale transition-all group">
+                        <input type="radio" name="tipo" value="doador" checked class="peer hidden">
+                        <div class="peer-checked:border-dn-green peer-checked:bg-dn-green-pale absolute inset-0 border-2 border-transparent rounded-2xl transition-all"></div>
+                        <span class="relative z-10 text-xs font-black text-dn-green-dark uppercase tracking-wider">Doador</span>
+                    </label>
+                    <label class="relative flex flex-col items-center p-4 border-2 border-dn-green-pale rounded-2xl cursor-pointer hover:bg-dn-green-pale transition-all group">
+                        <input type="radio" name="tipo" value="instituicao" class="peer hidden">
+                        <div class="peer-checked:border-dn-green peer-checked:bg-dn-green-pale absolute inset-0 border-2 border-transparent rounded-2xl transition-all"></div>
+                        <span class="relative z-10 text-xs font-black text-dn-green-dark uppercase tracking-wider">Instituição</span>
+                    </label>
+                </div>
+                <input type="password" name="senha" placeholder="Sua senha" required class="input-field">
+            </div>
+            <button type="submit" class="btn-primary w-full py-5 text-sm uppercase tracking-widest font-black shadow-xl">FINALIZAR CADASTRO</button>
+        </form>
+        <div class="mt-6 text-center">
+            <a href="/login" class="text-dn-ink-soft font-bold py-2 text-xs uppercase tracking-widest hover:text-dn-green transition-colors">Já tenho uma conta</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

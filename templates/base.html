@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DongNate Lite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dn-green': '#1A6B3C', 'dn-green-dark': '#0D361E', 'dn-green-pale': '#E8F5EE',
+                        'dn-amber': '#D97706', 'dn-amber-dark': '#92400E', 'dn-amber-light': '#F59E0B',
+                        'dn-cream': '#FAFAF7', 'dn-error': '#DC2626', 'dn-ink-mid': '#4B5563', 'dn-ink-soft': '#9CA3AF',
+                    },
+                    fontFamily: { 'playfair': ['"Playfair Display"', 'serif'], 'dmsans': ['"DM Sans"', 'sans-serif'], }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body { @apply bg-dn-cream font-dmsans text-dn-green-dark antialiased; }
+            h1, h2, h3, h4 { @apply font-playfair font-black; }
+        }
+        @layer components {
+            .btn-primary { @apply bg-dn-green text-white px-6 py-4 rounded-full font-bold hover:bg-dn-green-dark transition-all shadow-lg shadow-dn-green/20 text-center inline-block active:scale-95 text-sm uppercase tracking-widest; }
+            .input-field { @apply w-full p-4 bg-white border border-dn-green-pale rounded-2xl focus:outline-none focus:ring-2 focus:ring-dn-green transition-all placeholder:text-dn-ink-soft text-dn-green-dark font-medium; }
+            .dn-card { @apply bg-white rounded-[2.5rem] border border-dn-green-pale shadow-sm hover:shadow-md transition-all; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col {% if user and not hide_nav %}pb-24 md:pb-0{% endif %}">
+    {% if not hide_nav %}
+    <header class="bg-white border-b border-dn-green-pale p-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-2">
+            <a href="/" class="text-dn-green font-playfair text-2xl font-black tracking-tight">DongNate</a>
+        </div>
+        {% if user %}
+        <div class="flex items-center gap-3 sm:gap-6">
+            <div class="relative" id="notif-bell-container">
+                <button class="p-2 hover:bg-dn-green-pale rounded-xl relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-dn-green-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {% if unread_count > 0 %}
+                    <span class="absolute top-0 right-0 bg-dn-amber text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-pulse">{{ unread_count }}</span>
+                    {% endif %}
+                </button>
+                <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white border border-dn-green-pale rounded-[2rem] shadow-2xl p-6 z-[1000] max-h-96 overflow-y-auto">
+                    <h4 class="text-xs font-black text-dn-green uppercase tracking-widest mb-4">Avisos Recentes</h4>
+                    <div class="space-y-4">
+                        {% if notificacoes %}
+                            {% for notif in notificacoes %}
+                            <div class="p-3 rounded-2xl transition-colors {% if not notif.lida %}bg-dn-green-pale border border-dn-green/10{% else %}opacity-60{% endif %}" onclick="markAsRead('{{ notif.id }}')">
+                                <p class="text-[10px] font-black text-dn-green-dark mb-1 uppercase tracking-tighter">{{ notif.titulo }}</p>
+                                <p class="text-[11px] text-dn-ink-mid leading-tight">{{ notif.mensagem }}</p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-[10px] text-dn-ink-soft text-center py-4 italic">Nenhuma notificação.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/profile" class="flex items-center gap-3 group">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-xs font-black text-dn-green-dark leading-none group-hover:text-dn-green transition-colors">{{ user.nome.split(' ')[0] }}</p>
+                        <p class="text-[9px] font-bold text-dn-ink-soft uppercase tracking-wider">{{ 'Instituição' if user.tipo == 'instituicao' else 'Doador' }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-dn-green-pale rounded-xl border-2 border-white shadow-sm flex items-center justify-center text-dn-green font-bold">
+                        {{ user.nome[0] | upper }}
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="flex items-center gap-4">
+            <a href="/login" class="text-sm font-bold text-dn-green-dark hover:text-dn-green transition-colors">Entrar</a>
+            <a href="/register" class="btn-primary py-2 px-6 text-sm">Cadastrar</a>
+        </div>
+        {% endif %}
+    </header>
+    {% endif %}
+    <main class="flex-1">{% block content %}{% endblock %}</main>
+    <script>
+        const bell = document.getElementById('notif-bell-container');
+        const dropdown = document.getElementById('notif-dropdown');
+        if (bell) bell.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
+        window.onclick = () => { if (dropdown) dropdown.classList.add('hidden'); };
+        async function markAsRead(id) { await fetch(`/notificacoes/read/${id}`, { method: 'POST' }); location.reload(); }
+    </script>
+</body>
+</html>
